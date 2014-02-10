@@ -1,7 +1,6 @@
-$Id: README,v 1.9 2006/08/02 17:33:44 lmz Exp $
 
-Wireless Bandwidth estimation (WBest) 1.0 README
-================================================
+Wireless Bandwidth estimation (WBest) 1.0-ewa README
+====================================================
 
 
 Contents
@@ -12,7 +11,6 @@ Build WBest
 Run WBest
 WBest output
 Contact
-
 
 WBest
 =====
@@ -27,6 +25,11 @@ of the wireless network.  In the second step, a packet train scheme
 ddetermines achievable throughput and infers available bandwidth.  For
 more details, please visit http://perform.wpi.edu/tools and refer to
 our paper linked on the webpage.
+
+This code (version 1.0-ewa) is follow-on development by Eric Anderson.
+This basically exists for my own use at the moment, but I'm making it
+public. You can try to contact me about problems, but at this point I
+don't know anything that you don't.
 
 Build WBest
 ===========
@@ -47,9 +50,10 @@ start wbest_snd on the sender.
 
 On receiver:
 
-    ./wbest_rcv [-p udp_portnumber]
+    ./wbest_rcv [-p udp_portnumber] [-l]
 
         -p udp_portnumber       : Option to change the UDP port (default: 1234)
+        -l                      : Loop to keep taking measurements indefinitely
 
 
 On sender:
@@ -146,6 +150,12 @@ loss".
 
 Contact
 =======
+
+Note: The original author (Mingzhe Li) seems to have graduated, and I
+don't have contact information for him.
+
+My e-mail address is listed on my web page at http://www.cs.cmu.edu/~andersoe/.
+
 For any information, bugs, and suggestions, please contact:
         Mingzhe Li      (lmz@cs.wpi.edu)
         Mark Claypool   (claypool@cs.wpi.edu)
