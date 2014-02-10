@@ -1,0 +1,152 @@
+$Id: README,v 1.9 2006/08/02 17:33:44 lmz Exp $
+
+Wireless Bandwidth estimation (WBest) 1.0 README
+================================================
+
+
+Contents
+========
+
+WBest
+Build WBest
+Run WBest
+WBest output
+Contact
+
+
+WBest
+=====
+WBest is a wireless bandwidth estimation tool designed for
+applications that requires fast convergence time and low
+intrusiveness, such as multimedia streaming applications.  WBest
+employs packet dispersion techniques to provide capacity and available
+bandwidth information for the underlying wireless networks.  WBest
+uses a two-step algorithm to determine available bandwidth.  In the
+first step, a packet pair technique estimates the effective capacity
+of the wireless network.  In the second step, a packet train scheme
+ddetermines achievable throughput and infers available bandwidth.  For
+more details, please visit http://perform.wpi.edu/tools and refer to
+our paper linked on the webpage.
+
+Build WBest
+===========
+WBest was developed and tested under Linux.  It should be able to build
+under most Linux releases.  In Linux system, type "make" in the source
+directory to build WBest.
+
+
+Run WBest
+=========
+
+WBest has two executable files: wbest_snd and wbest_rcv.  WBest needs
+to be run on two end hosts of the network path, i.e. wbest_snd on the
+sender and wbest_rcv on the receiver.  WBest measures the network path
+along the direction from the sender to the receiver.  To start a WBest
+estimation, one needs to start wbest_rcv on the receiver first and then
+start wbest_snd on the sender.
+
+On receiver:
+
+    ./wbest_rcv [-p udp_portnumber]
+
+        -p udp_portnumber       : Option to change the UDP port (default: 1234)
+
+
+On sender:
+
+    ./wbest_snd [-h hostname] [-p udp_portnumber]
+                [-s packet_size_bytes] [-n num_packet_pair]
+                [-m train_length]
+
+        -h hostname             : The receiver hostname (default: localhost)
+        -p udp_portnumber       : Option to change the UDP port (default: 1234)
+        -s packet_size_bytes    : Probing packet size (default: 1460 Bytes)
+        -n num_packet_pair      : Number of packet pacirs for capacity
+                                  probing (default: 30)
+        -m train_length         : Length of packet train
+                                  (default: 30 packets)
+
+WBest output
+============
+WBest reports both the effective capacity and the available bandwidth
+on the sender side (wbest_snd). Detailed information of the packet
+pairs and packet train are printed on the receiver side (wbest_rcv).
+Below is an example of an estimation in an IEEE 802.11g network.
+
+On the Sender:
+------------------------------------------------------------
+ > ./wbest_snd -h wbest
+ hostname: wbest
+ Looking up TCP server wbest...
+ TCP connected to wbest:9878
+ Looking up UDP wbest...
+ UDP connected to wbest:1234
+ The timer resolution is 1000 usecs.
+ The gettimeofday resolution is 0 usecs.
+ Ce = 30.185917
+ PacketTrain: sending 30 PT with 386.935404 us per packet, at 30.185917 Mbps
+ Real sending rate: 30.180879 Mbps, time spend: 11610.000000 us, average packet time 387.000000 us
+ Ab = 24.125469
+ Total estimation time: 416001 usec.
+ WBest sender is now off
+------------------------------------------------------------
+
+Effective capacity (Ce) and available bandwidth (Ab) are printed out
+during the estimation.  The "timer resolution" is the median delay of
+the timer in select function in usecs, which is used to make the
+decision of switch the delay timer from select system call to
+gettimeofday.  The "gettimeofday resolution" is the median of delay
+between two successive gettimeofday calls in usecs, which is used to
+end the delayer timer when the delay time is less than the resolution
+of gettimeofday.  "Total estimation time" is the time used for the
+whole estimation in usec.
+
+On the Receiver:
+------------------------------------------------------------
+ > ./wbest_rcv
+ UDP Server named wbest waiting on port 1234
+ TCPServer named wbest listening on port 9878
+ [ 0]: 1460 recv in 442 usec - Ce:   26.43 Mbps, sendRate: 1946.67 Mbps
+ [ 1]: 1460 recv in 401 usec - Ce:   29.13 Mbps, sendRate: 1668.57 Mbps
+ ...
+ [29]: 1460 recv in 436 usec - Ce:   26.79 Mbps, sendRate: 1946.67 Mbps
+ Summary of Ce test with 30 valid tests out 30 pairs:
+        median: 30.185917 Mbps
+
+ [ 0]( 0- 1): 1460 recv in 387 usec - At:   37.92 Mbps, sendRate: 30.18 Mbps
+ [ 1]( 1- 2): 1460 recv in 713 usec - At:   16.38 Mbps, sendRate: 30.18 Mbps
+ ...
+ [28](28-29): 1460 recv in 454 usec - At:   25.73 Mbps, sendRate: 30.18 Mbps
+
+ Summary of At test with 29 valid tests out 30 train (29 tests):
+        packet loss: 0 (0.000000%)
+        invalid result: 0 (0.000000%)
+        mean At: 25.138786 Mbps
+        mean Ab: 24.125470 Mbps
+        mean Ab with loss: 24.125470 Mbps
+ WBest receiver is now off
+------------------------------------------------------------
+
+Summary of effective capacity (Ce) test prints dispersion time,
+dispersion rate and the sending rate at sender of each packet pairs.
+The median of Ce is the rate used for the sender to send packet train.
+Summary of achievable throughput (At) test prints dispersion
+information (after error correction), dispersion rate, and sending
+rate of each packet in the train.  The dispersion time and rate may
+not always be the samee because the dispersion time is set to the
+sending gap if the arriving rate is higher than the sending rate.  This
+is used to correct the errors caused by user level time stamps, which
+may cause a higher dispersion rate than the capacity.  Please refer to
+our paper for detailed information on this error correction.  "mean
+At" and "mean Ab" report the achievable throughput and inferred
+available bandwidth, respectively.  "mean Ab with loss" reports the
+inferred available bandwidth that takes packet loss into
+consideration.  The results returned to the sender is "mean Ab with
+loss".
+
+Contact
+=======
+For any information, bugs, and suggestions, please contact:
+        Mingzhe Li      (lmz@cs.wpi.edu)
+        Mark Claypool   (claypool@cs.wpi.edu)
+        Robert Kinicki  (rek@cs.wpi.edu)
