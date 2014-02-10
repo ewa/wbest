@@ -29,7 +29,8 @@
 #include "wbest.h"
 
 // global variable
-int tcpSocket, udpSocket;                  // TCP/UDP socket  
+int listenSocket, tcpSocket, udpSocket;                  // TCP/UDP socket  
+struct sockaddr_in saTCPServer, saTCPClient;              // TCP address
 struct timeval arrival[MAX_PKT_NUM];       // arrrival time
 int sendtime[MAX_PKT_NUM];                 // sending time
 int seq[MAX_PKT_NUM];                      // sequence number
@@ -42,6 +43,7 @@ double allCE = 0., allAT = 0., allAB =0.;
 
 // Function prototype
 void TCPServer(int nPort);                             // setup the TCP server 
+void AcceptSocket();				       // Accept new connection to TCP server
 void UDPServer(int nPort);                             // the UDP server 
 void UDPReceive (enum Options option, int i_PktNumb);  // Receive UDP packet (PP/PT) 
 double ProcessPP (int i_PktNumb);                      // Process PP data
@@ -60,9 +62,10 @@ int main(int argc, char **argv)
   int i_PktNumb; 
   struct Ctl_Pkt control_pkt;
   int c;
+  int loopit=0;
 
   //use getopt to parse the command line
-  while ((c = getopt(argc, argv, "p:")) != EOF)
+  while ((c = getopt(argc, argv, "p:l")) != EOF)
     {
       switch (c)
         {
@@ -71,17 +74,22 @@ int main(int argc, char **argv)
           nPortUDP = atoi(optarg);
           break;
 
+        case 'l':
+	  printf("will loop for repeated measurements\n");
+	  loopit = 1;
+          break;
+
         case '?':
           printf("ERROR: illegal option %s\n", argv[optind-1]);
           printf("Usage:\n");
-          printf("\t%s -p udp_portnumber\n", argv[0]);
+          printf("\t%s -p udp_portnumber [-l]\n", argv[0]);
           exit(1);
           break;
 
         default:
           printf("WARNING: no handler for option %c\n", c);
           printf("Usage:\n");
-          printf("\t%s -p udp_portnumber\n", argv[0]);
+          printf("\t%s -p udp_portnumber [-l]\n", argv[0]);
           exit(1);
           break;
         }
@@ -93,73 +101,82 @@ int main(int argc, char **argv)
   UDPServer(nPortUDP);
   TCPServer(nPortTCP);
 
-  while(1) 
-    {
-      nRet = recv(tcpSocket, (char *) &control_pkt, sizeof(control_pkt), 0);
-      if (nRet <= 0 ) // peer closed
-	{
-	  break;
-	}
+  while(1) {
+    AcceptSocket();
+    
+    /* Will break when tcp session is lost;
+       will exit if an error occurs*/
+    while(1) 
+      {
+	nRet = recv(tcpSocket, (char *) &control_pkt, sizeof(control_pkt), 0);
+	if (nRet <= 0 ) // peer closed
+	  {
+	    fprintf(stderr, "Exiting because peer closed.\n");
+	    break;
+	  }
       
-      // what does the client want to do? PP/PT?
-      if (nRet!=sizeof(control_pkt) || (control_pkt.option != PacketPair && control_pkt.option!=PacketTrain)) 
-	{
-	  printf("Receive unknow message %d, with size %d\n", control_pkt.option, nRet);
-	  exit(1);
-	}
+	// what does the client want to do? PP/PT?
+	if (nRet!=sizeof(control_pkt) || (control_pkt.option != PacketPair && control_pkt.option!=PacketTrain)) 
+	  {
+	    printf("Receive unknow message %d, with size %d\n", control_pkt.option, nRet);
+	    exit(1);
+	  }
 
-      i_PktNumb = control_pkt.value;
+	i_PktNumb = control_pkt.value;
   
-      switch (control_pkt.option) 
-	{
-	case PacketPair:
-	  control_pkt.option = Ready;
-	  if (send(tcpSocket, (char *) &control_pkt, sizeof(control_pkt), 0) != sizeof(control_pkt))
-	    {
-	      perror("Send TCP control packet error");
-	      exit(1);
-	    }
-	  // receive PP
-	  UDPReceive(PacketPair, i_PktNumb); 
+	switch (control_pkt.option) 
+	  {
+	  case PacketPair:
+	    control_pkt.option = Ready;
+	    if (send(tcpSocket, (char *) &control_pkt, sizeof(control_pkt), 0) != sizeof(control_pkt))
+	      {
+		perror("Send TCP control packet error");
+		exit(1);
+	      }
+	    // receive PP
+	    UDPReceive(PacketPair, i_PktNumb); 
 
-	  control_pkt.option = PacketPair;
-	  allCE = ProcessPP(i_PktNumb); 
-	  control_pkt.value = (unsigned int) (allCE * 1000000);
+	    control_pkt.option = PacketPair;
+	    allCE = ProcessPP(i_PktNumb); 
+	    control_pkt.value = (unsigned int) (allCE * 1000000);
 
-	  if (send(tcpSocket, (char *) &control_pkt, sizeof(control_pkt), 0) != sizeof(control_pkt))
-	    {
-	      perror("Send TCP control packet error");
-	      exit(1);
-	    }
-	  break;
+	    if (send(tcpSocket, (char *) &control_pkt, sizeof(control_pkt), 0) != sizeof(control_pkt))
+	      {
+		perror("Send TCP control packet error");
+		exit(1);
+	      }
+	    break;
 
-	case PacketTrain:
-	  control_pkt.option = Ready;
-	  if (send(tcpSocket, (char *) &control_pkt, sizeof(control_pkt), 0) != sizeof(control_pkt))
-	    {
-	      perror("Send TCP control packet error");
-	      exit(1);
-	    }
+	  case PacketTrain:
+	    control_pkt.option = Ready;
+	    if (send(tcpSocket, (char *) &control_pkt, sizeof(control_pkt), 0) != sizeof(control_pkt))
+	      {
+		perror("Send TCP control packet error");
+		exit(1);
+	      }
 
-	  // receive PT
-	  UDPReceive(PacketTrain, i_PktNumb);  
+	    // receive PT
+	    UDPReceive(PacketTrain, i_PktNumb);  
 
-	  control_pkt.option = PacketTrain;
-	  allAB = ProcessPT(i_PktNumb);
+	    control_pkt.option = PacketTrain;
+	    allAB = ProcessPT(i_PktNumb);
       
-	  control_pkt.value = (unsigned int)(allAB * 1000000);
+	    control_pkt.value = (unsigned int)(allAB * 1000000);
 
-	  if (send(tcpSocket, (char *) &control_pkt, sizeof(control_pkt), 0) != sizeof(control_pkt))
-	    {
-	      perror("Send TCP control packet error");
-	      exit(1);
-	    }
-	  break;
+	    if (send(tcpSocket, (char *) &control_pkt, sizeof(control_pkt), 0) != sizeof(control_pkt))
+	      {
+		perror("Send TCP control packet error");
+		exit(1);
+	      }
+	    break;
 
-	default:
-	  break;
-	}
-    } //end while(1)
+	  default:
+	    break;
+	  }
+      } //end while(1)
+        
+    if (!loopit) break;
+  }//end while(1)
 
   CleanUp (0);
   return 0;
@@ -168,10 +185,7 @@ int main(int argc, char **argv)
 ////////////////////////////////////////////////////////////////////////////////////
 void TCPServer (int nPort)
 {
-  int listenSocket;
-  struct sockaddr_in saTCPServer, saTCPClient;              // TCP address
   int nRet;                                                 // result
-  unsigned int nLen;					    // length
   char szBuf[4096];                                         // client name
 
   listenSocket = socket(AF_INET, SOCK_STREAM, IPPROTO_TCP);
@@ -212,21 +226,27 @@ void TCPServer (int nPort)
   // Show the server name and port number
   printf("\nTCP Server named %s listening on port %d\n", szBuf, nPort);
   
+  //  AcceptSocket();
+  
+} // end TCPServer()
+
+void AcceptSocket()
+{
+  unsigned int nLen;					    // length
   /* Set the size of the in-out parameter */
   nLen = sizeof(saTCPClient);
-
+  
   /* Wait for a client to connect */
   tcpSocket = accept(listenSocket, (struct sockaddr *) &saTCPClient,  &nLen);
   if (tcpSocket < 0)
     {
-      perror("Failed to sccept client connection");
+      perror("Failed to accept client connection");
       close(listenSocket);
       exit(1);
     }
   
-  close (listenSocket);
-  
-} // end TCPServer()
+  //close (listenSocket);
+}
 
 /////////////////////////////////////////////////////////////////////////////
 void UDPServer(int nPort)
@@ -467,6 +487,7 @@ double ProcessPT (int i_PktNumb)
 
   sort_int(disperse, count);
   
+  printf("psize: %f, sum: %f, count:%f, allCE:%f\n", (double)psize[0], (double)sum, (double)count, allCE);
   meanAt = (double)psize[0] * 8.0 / ((double)sum / (double)count);
   medianAt = (double)psize[0] * 8.0 / (((double)disperse[count/2] + (double)disperse[count/2+1]) / 2.0);
   //printf("\tmean At: %f Mbps\n\tmedian At: %f Mbps\n", meanAt, medianAt);
@@ -570,6 +591,7 @@ void sort_int (int arr[], int num_elems)
 /////////////////////////////////////////////////////////////////////////////
 void CleanUp(int arg1) 
 {
+  close (listenSocket);
   close (tcpSocket);
   close (udpSocket);
   printf("WBest receiver is now off\n");
