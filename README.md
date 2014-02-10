@@ -1,19 +1,8 @@
-
 Wireless Bandwidth estimation (WBest) 1.0-ewa README
 ====================================================
 
-
-Contents
-========
-
 WBest
-Build WBest
-Run WBest
-WBest output
-Contact
-
-WBest
-=====
+-----
 WBest is a wireless bandwidth estimation tool designed for
 applications that requires fast convergence time and low
 intrusiveness, such as multimedia streaming applications.  WBest
@@ -32,14 +21,14 @@ public. You can try to contact me about problems, but at this point I
 don't know anything that you don't.
 
 Build WBest
-===========
+-----------
 WBest was developed and tested under Linux.  It should be able to build
 under most Linux releases.  In Linux system, type "make" in the source
 directory to build WBest.
 
 
 Run WBest
-=========
+----------
 
 WBest has two executable files: wbest_snd and wbest_rcv.  WBest needs
 to be run on two end hosts of the network path, i.e. wbest_snd on the
@@ -71,29 +60,30 @@ On sender:
                                   (default: 30 packets)
 
 WBest output
-============
+-------------
 WBest reports both the effective capacity and the available bandwidth
 on the sender side (wbest_snd). Detailed information of the packet
 pairs and packet train are printed on the receiver side (wbest_rcv).
 Below is an example of an estimation in an IEEE 802.11g network.
 
 On the Sender:
-------------------------------------------------------------
- > ./wbest_snd -h wbest
- hostname: wbest
- Looking up TCP server wbest...
- TCP connected to wbest:9878
- Looking up UDP wbest...
- UDP connected to wbest:1234
- The timer resolution is 1000 usecs.
- The gettimeofday resolution is 0 usecs.
- Ce = 30.185917
- PacketTrain: sending 30 PT with 386.935404 us per packet, at 30.185917 Mbps
- Real sending rate: 30.180879 Mbps, time spend: 11610.000000 us, average packet time 387.000000 us
- Ab = 24.125469
- Total estimation time: 416001 usec.
- WBest sender is now off
-------------------------------------------------------------
+
+
+    > ./wbest_snd -h wbest
+     hostname: wbest
+     Looking up TCP server wbest...
+     TCP connected to wbest:9878
+     Looking up UDP wbest...
+     UDP connected to wbest:1234
+     The timer resolution is 1000 usecs.
+     The gettimeofday resolution is 0 usecs.
+     Ce = 30.185917
+     PacketTrain: sending 30 PT with 386.935404 us per packet, at 30.185917 Mbps
+     Real sending rate: 30.180879 Mbps, time spend: 11610.000000 us, average packet time 387.000000 us
+     Ab = 24.125469
+     Total estimation time: 416001 usec.
+     WBest sender is now off
+
 
 Effective capacity (Ce) and available bandwidth (Ab) are printed out
 during the estimation.  The "timer resolution" is the median delay of
@@ -106,30 +96,31 @@ of gettimeofday.  "Total estimation time" is the time used for the
 whole estimation in usec.
 
 On the Receiver:
-------------------------------------------------------------
- > ./wbest_rcv
- UDP Server named wbest waiting on port 1234
- TCPServer named wbest listening on port 9878
- [ 0]: 1460 recv in 442 usec - Ce:   26.43 Mbps, sendRate: 1946.67 Mbps
- [ 1]: 1460 recv in 401 usec - Ce:   29.13 Mbps, sendRate: 1668.57 Mbps
- ...
- [29]: 1460 recv in 436 usec - Ce:   26.79 Mbps, sendRate: 1946.67 Mbps
- Summary of Ce test with 30 valid tests out 30 pairs:
-        median: 30.185917 Mbps
 
- [ 0]( 0- 1): 1460 recv in 387 usec - At:   37.92 Mbps, sendRate: 30.18 Mbps
- [ 1]( 1- 2): 1460 recv in 713 usec - At:   16.38 Mbps, sendRate: 30.18 Mbps
- ...
- [28](28-29): 1460 recv in 454 usec - At:   25.73 Mbps, sendRate: 30.18 Mbps
 
- Summary of At test with 29 valid tests out 30 train (29 tests):
-        packet loss: 0 (0.000000%)
-        invalid result: 0 (0.000000%)
-        mean At: 25.138786 Mbps
-        mean Ab: 24.125470 Mbps
-        mean Ab with loss: 24.125470 Mbps
- WBest receiver is now off
-------------------------------------------------------------
+    > ./wbest_rcv
+     UDP Server named wbest waiting on port 1234
+     TCPServer named wbest listening on port 9878
+     [ 0]: 1460 recv in 442 usec - Ce:   26.43 Mbps, sendRate: 1946.67 Mbps
+     [ 1]: 1460 recv in 401 usec - Ce:   29.13 Mbps, sendRate: 1668.57 Mbps
+     ...
+     [29]: 1460 recv in 436 usec - Ce:   26.79 Mbps, sendRate: 1946.67 Mbps
+     Summary of Ce test with 30 valid tests out 30 pairs:
+            median: 30.185917 Mbps
+    
+     [ 0]( 0- 1): 1460 recv in 387 usec - At:   37.92 Mbps, sendRate: 30.18 Mbps
+     [ 1]( 1- 2): 1460 recv in 713 usec - At:   16.38 Mbps, sendRate: 30.18 Mbps
+     ...
+     [28](28-29): 1460 recv in 454 usec - At:   25.73 Mbps, sendRate: 30.18 Mbps
+    
+     Summary of At test with 29 valid tests out 30 train (29 tests):
+            packet loss: 0 (0.000000%)
+            invalid result: 0 (0.000000%)
+            mean At: 25.138786 Mbps
+            mean Ab: 24.125470 Mbps
+            mean Ab with loss: 24.125470 Mbps
+     WBest receiver is now off
+
 
 Summary of effective capacity (Ce) test prints dispersion time,
 dispersion rate and the sending rate at sender of each packet pairs.
@@ -157,6 +148,7 @@ don't have contact information for him.
 My e-mail address is listed on my web page at http://www.cs.cmu.edu/~andersoe/.
 
 For any information, bugs, and suggestions, please contact:
-        Mingzhe Li      (lmz@cs.wpi.edu)
-        Mark Claypool   (claypool@cs.wpi.edu)
-        Robert Kinicki  (rek@cs.wpi.edu)
+
+	Mingzhe Li      (lmz@cs.wpi.edu)
+    Mark Claypool   (claypool@cs.wpi.edu)
+	Robert Kinicki  (rek@cs.wpi.edu)
