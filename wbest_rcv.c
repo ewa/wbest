@@ -171,7 +171,7 @@ void TCPServer (int nPort)
   int listenSocket;
   struct sockaddr_in saTCPServer, saTCPClient;              // TCP address
   int nRet;                                                 // result
-  int nLen;                                                 // length
+  unsigned int nLen;					    // length
   char szBuf[4096];                                         // client name
 
   listenSocket = socket(AF_INET, SOCK_STREAM, IPPROTO_TCP);
@@ -276,7 +276,8 @@ void UDPServer(int nPort)
 /////////////////////////////////////////////////////////////////////////////
 void UDPReceive (enum Options option, int i_PktNumb)
 {
-  int nLen, inum = 0, nSelect = 0;
+  int inum = 0, nSelect = 0;
+  unsigned int nLen = 0;
   char szBuf[4096];
   int nRet, errgen=0;
   struct sockaddr_in saUDPClient;
